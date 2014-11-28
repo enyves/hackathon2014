@@ -12,7 +12,7 @@ function Marine:get_marine()
 end
 
 function Marine:select_mode()
-    --self.target = self:getClosest()
+    self.target = self:getClosest()
     return "advance"
 end
 
@@ -21,9 +21,7 @@ function Marine:provide_steps(prev)
 
     print(dump(self:shortest_path_to_weapon()))
 
-    -- return { { Command = "move", Path = Game.Map:get_move_path(self.marine_id, 10, 10) }, { Command = "done" } }
-    return { Command = "done" }
---[[=======
+--[[
     if (self.target ~= nil) then
         print("moving!") 
         local targetEntity = Game.Map:get_entity(self.target)
@@ -32,9 +30,8 @@ function Marine:provide_steps(prev)
         print(dump(path))
         return { { Command = "move", Path = path }, { Command = "done" } }
     end
+    ]]--
     return { { Command = "done" } }
-    
->>>>>>> Stashed changes--]]
 end
 
 function Marine:on_aiming(attack) end
@@ -80,10 +77,10 @@ function Marine:distance(entity2_id)
     return #steps
 end
 
-function Marine:getClosest() 
+function Marine:getClosestMarine() 
     local closest = nil
     local closestDistance = 9999
-    for i = 1, #Marines do
+    for i = 1, #Marines, 1 do
         if (Marines[i].marine_id ~= self.marine_id) then
             local distance = self:distance(Marines[i].marine_id)
             print("distance between " .. self.marine_id .. " and " .. Marines[i].marine_id .. " is " .. distance)
