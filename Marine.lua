@@ -35,7 +35,6 @@ function Marine:provide_steps(prev)
         --TODO: shoot
     end
     return { { Command = "done" } }
-    
 end
 
 function Marine:on_aiming(attack) end
@@ -80,10 +79,10 @@ function Marine:distance(entity2_id)
     return #steps
 end
 
-function Marine:getClosest() 
+function Marine:getClosestMarine() 
     local closest = nil
     local closestDistance = 9999
-    for i = 1, #Marines do
+    for i = 1, #Marines, 1 do
         if (Marines[i].marine_id ~= self.marine_id) then
             local distance = self:distance(Marines[i].marine_id)
             print("distance between " .. self.marine_id .. " and " .. Marines[i].marine_id .. " is " .. distance)
