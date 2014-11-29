@@ -27,8 +27,8 @@ function Marine:provide_steps(prev)
             if (localEntities[i] ~= 0 and string.match(localEntities[i].Id, "^w_")) then
                 self.hasWeapon = true
                 print(self.marine_id .. " picked up a weapon: " .. localEntities[i].Id)
-                print(dump(localEntities[i]))
-                self.weapon = localEntities[i].Type
+                print("=========", dump(localEntities[i]))
+                self.weapon = localEntities[i]
                 return { { Command = "pickup"}, {Command = "done"}}
             end 
         end
@@ -40,8 +40,9 @@ function Marine:provide_steps(prev)
         if (closestMarine) then
             if (Game.Map:entity_has_los(self.marine_id, closestMarine.Bounds.X, closestMarine.Bounds.Y)) then
                 print(self.marine_id .. " shooting at " .. closestMarine.Id) 
+                print("weapon :: ", dump(self.weapon))
                 return { 
-                            { Command = "select_weapon", Weapon = self.weapon }, 
+                            { Command = "select_weapon", Weapon = self.weapon.Type }, 
                             { Command = "attack", Target = { X = closestMarine.Bounds.X, Y = closestMarine.Bounds.Y } },
                             { Command = "done" }
                         }
@@ -86,6 +87,9 @@ end
 
 function Marine:distance(entity_id)
     local enemy = Game.Map:get_entity(entity_id);
+    if enemy == nil then
+        return 0
+    end
     local marine = Game.Map:get_entity(self.marine_id)
     local path = Game.Map:get_attack_path(self.marine_id, enemy.Bounds.X, enemy.Bounds.Y)
     -- print(dump(marine.Bounds), "   ", dump(enemy.Bounds))
@@ -99,7 +103,7 @@ function Marine:get_closest_marine()
     for i = 1, #Marines, 1 do
         if (Marines[i].marine_id ~= self.marine_id) then
             local distance = self:distance(Marines[i].marine_id)
-            if distance < minPath then
+            if distance < minPath and distance ~= 0 then
                 minPath = distance
                 minInd = i
             end
@@ -113,6 +117,10 @@ function Marine:get_closest_marine()
     end
 end
 
+
+function Marine:when_other_marine_gotdamaged(other, event, prev)
+    print("-===============")
+end
 
 
 function dump(o)
