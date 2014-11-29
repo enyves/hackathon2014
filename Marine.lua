@@ -4,6 +4,7 @@ function Marine:initialize(player_index, marine_id, instance_index)
     self.player_index = player_index
     self.marine_id = marine_id
     self.instance_index = instance_index
+    self.hasWeapon = false
 end
 
 function Marine:get_marine()
@@ -17,17 +18,22 @@ end
 
 function Marine:provide_steps(prev)
     if (prev) then return nil end
+    local thisMarine = self:get_marine()
 
-    print(dump(self:shortest_path_to_weapon()))
-
-    -- if (self.target ~= nil) then
-    --     print("moving!") 
-    --     local targetEntity = Game.Map:get_entity(self.target)
-    --     print(targetEntity.Bounds.X .. "," .. targetEntity.Bounds.Y)
-    --     local path = Game.Map:get_move_path(self.marine_id, targetEntity.Bounds.X, targetEntity.Bounds.Y);
-    --     print(dump(path))
-    --     return { { Command = "move", Path = path }, { Command = "done" } }
-    -- end
+    if (not self.hasWeapon) then
+        local localEntities = Game.Map:entities_at(thisMarine.Bounds.X, thisMarine.Bounds.Y);
+        for i = 1, #localEntities do
+            if (localEntities[i] ~= 0 and string.match(localEntities[i].Id, "^w_")) then
+                self.hasWeapon = true
+                print(self.marine_id .. " picked up a weapon: " .. localEntities[i].Id)
+                return {{Command = "pickup"}, {Command = "done"}}
+            end 
+        end
+        local weaponBoundary = self:shortest_path_to_weapon()
+        return { { Command = "move", Path = Game.Map:get_move_path(self.marine_id, weaponBoundary.X, weaponBoundary.Y) }, { Command = "done" } }
+    else
+        --TODO: shoot
+    end
 
     return { { Command = "done" } }
 end
