@@ -4,7 +4,6 @@ function Marine:initialize(player_index, marine_id, instance_index)
     self.player_index = player_index
     self.marine_id = marine_id
     self.instance_index = instance_index
-    self.target = nil
 end
 
 function Marine:get_marine()
@@ -12,7 +11,7 @@ function Marine:get_marine()
 end
 
 function Marine:select_mode()
-    self.target = self:getClosest()
+    self.target = self:get_closest_marine()
     return "advance"
 end
 
@@ -21,16 +20,15 @@ function Marine:provide_steps(prev)
 
     print(dump(self:shortest_path_to_weapon()))
 
---[[
-    if (self.target ~= nil) then
-        print("moving!") 
-        local targetEntity = Game.Map:get_entity(self.target)
-        print(targetEntity.Bounds.X .. "," .. targetEntity.Bounds.Y)
-        local path = Game.Map:get_move_path(self.marine_id, targetEntity.Bounds.X, targetEntity.Bounds.Y);
-        print(dump(path))
-        return { { Command = "move", Path = path }, { Command = "done" } }
-    end
-    ]]--
+    -- if (self.target ~= nil) then
+    --     print("moving!") 
+    --     local targetEntity = Game.Map:get_entity(self.target)
+    --     print(targetEntity.Bounds.X .. "," .. targetEntity.Bounds.Y)
+    --     local path = Game.Map:get_move_path(self.marine_id, targetEntity.Bounds.X, targetEntity.Bounds.Y);
+    --     print(dump(path))
+    --     return { { Command = "move", Path = path }, { Command = "done" } }
+    -- end
+
     return { { Command = "done" } }
 end
 
@@ -60,38 +58,39 @@ function Marine:shortest_path_to_weapon()
         end
     end
 
-    -- print(dump(weapons[minInd]))
-    
     return weapons[minInd].Bounds
 end
 
-function Marine:distance(entity2_id) 
-    local entity2 = Game.Map:get_entity(entity2_id)
-    if (entity2 == nil) then 
-        print ("Entity " .. entity2_id .. " not found!") 
-        return 9999 
-    end
-    local steps = Game.Map:get_move_path(self.marine_id, entity2.Bounds.X, entity2.Bounds.Y)
-    print(dump(steps));
-    if (#steps == 0) then return 9999 end
-    return #steps
+function Marine:distance(entity_id)
+    local enemy = Game.Map:get_entity(entity_id);
+    local marine = Game.Map:get_entity(self.marine_id)
+    local path = Game.Map:get_attack_path(self.marine_id, enemy.Bounds.X, enemy.Bounds.Y)
+    -- print(dump(marine.Bounds), "   ", dump(enemy.Bounds))
+    -- print("path: ", dump(path))
+    return tablelength(path)
 end
 
-function Marine:getClosestMarine() 
-    local closest = nil
-    local closestDistance = 9999
+function Marine:get_closest_marine()
+    local minPath = 9999
+    local minInd = 9999
     for i = 1, #Marines, 1 do
         if (Marines[i].marine_id ~= self.marine_id) then
             local distance = self:distance(Marines[i].marine_id)
-            print("distance between " .. self.marine_id .. " and " .. Marines[i].marine_id .. " is " .. distance)
-            if (closestDistance > distance) then
-                closest = Marines[i].marine_id
-                closestDistance = distance
-            end            
+            if distance < minPath then
+                minPath = distance
+                minInd = i
+            end
         end
     end
-    return closest
+    if minInd < 9999 then
+        return Game.Map:get_entity(Marines[minInd].marine_id)
+    else
+        print("no marines found")
+        return nil
+    end
 end
+
+
 
 function dump(o)
    if type(o) == 'table' then
